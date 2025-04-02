@@ -1,23 +1,42 @@
 import requests
 from bs4 import BeautifulSoup
 import time
+import random
+import json
+import chardet 
 
-valid_codes = []
- 
-for num_annonce in range (3302000, 3303001) : 
-    time.sleep (0.1)
-    page =  requests.get (f"http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann={num_annonce}")
-    src = page.content
-    soup = BeautifulSoup (src, "lxml")
-    if "Cette annonce est inexistante" not in soup.title.string :
-        valid_codes.append (num_annonce)  
-            
-print (f"annonce trouve : {len(valid_codes)}") # 28
-print ("-------------------------------------")
-print (valid_codes)
+num_page = 1
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/109.0",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/537.36"
+]
 
-with open ("temporaire.txt", 'w') as file : 
-    for code in valid_codes : 
-        file.write (f"{code} \n")
+headers = {
+    'User-Agent' : random.choice (user_agents)
+}
+url = f"http://www.tunisie-annonce.com/AnnoncesImmobilier.asp?rech_cod_cat=1&rech_cod_rub=&rech_cod_typ=&rech_cod_sou_typ=&rech_cod_pay=TN&rech_cod_reg=&rech_cod_vil=&rech_cod_loc=&rech_prix_min=&rech_prix_max=&rech_surf_min=&rech_surf_max=&rech_age=&rech_photo=&rech_typ_cli=&rech_order_by=31&rech_page_num={num_page}"
+page = requests.get (url, headers)
+print (page.status_code)
 
-# valid_codes = [[3302198, 3302296, 3302311, 3302332, 3302336, 3302339, 3302342, 3302366, 3302370, 3302381, 3302424, 3302510, 3302552, 3302570, 3302572, 3302604, 3302628, 3302694, 3302707, 3302709, 3302735, 3302751, 3302764, 3302923, 3302926, 3302931, 3302938, 3303000]]
+def main (page) : 
+    src = page.content  
+    encoding_detected = chardet.detect(src)["encoding"]
+    print(f"Encodage détecté : {encoding_detected}") 
+    html_content = src.decode(encoding_detected, errors="replace")
+    
+    soup = BeautifulSoup (html_content, 'lxml')
+    annonces = soup.find_all ("tr", {"class", "Tableau1"})
+    
+    def get_url_annonce (annonce) : 
+        cellules = annonce.find_all ("td") 
+        print (cellules [7])
+        print ("------------------------------")
+        print (cellules [9])
+        
+    
+    get_url_annonce (annonces[0])
+    
+main (page)
+    
