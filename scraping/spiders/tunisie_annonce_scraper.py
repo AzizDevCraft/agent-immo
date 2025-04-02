@@ -1,11 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 import time
 import random
 import json
 import chardet 
 
-num_page = 1
+num_page = 2
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -18,7 +19,8 @@ headers = {
 }
 url = f"http://www.tunisie-annonce.com/AnnoncesImmobilier.asp?rech_cod_cat=1&rech_cod_rub=&rech_cod_typ=&rech_cod_sou_typ=&rech_cod_pay=TN&rech_cod_reg=&rech_cod_vil=&rech_cod_loc=&rech_prix_min=&rech_prix_max=&rech_surf_min=&rech_surf_max=&rech_age=&rech_photo=&rech_typ_cli=&rech_order_by=31&rech_page_num={num_page}"
 page = requests.get (url, headers)
-print (page.status_code)
+
+count = 1
 
 def main (page) : 
     src = page.content  
@@ -29,14 +31,32 @@ def main (page) :
     soup = BeautifulSoup (html_content, 'lxml')
     annonces = soup.find_all ("tr", {"class", "Tableau1"})
     
+    try : 
+        with open ("data/raw/annonce-urls.json", 'r', encoding = 'utf-8') as file : 
+            ancienne_data = json.load (file)
+    except FileNotFoundError : 
+        ancienne_data = []
+    
     def get_url_annonce (annonce) : 
+        detail = {}
         cellules = annonce.find_all ("td") 
-        print (cellules [7])
-        print ("------------------------------")
-        print (cellules [9])
+        url= f"http://www.tunisie-annonce.com/{cellules [7].contents[-2].get ("href")}"
+        detail = {
+            'site_web' : 'http://www.tunisie-annonce.com', 
+            'url_annonce' : url, 
+            'date_recup' : datetime.now().strftime("%Y-%m-%d")
+        }
         
+        return detail 
     
-    get_url_annonce (annonces[0])
     
+    for annonce in annonces : 
+        ancienne_data.append (get_url_annonce (annonce))
+        print (f"annonce {count} recuperer et ajouter avec succes !")
+        count += 1
+    
+    with open ("data/raw/annonce-urls.json", 'w', encoding = 'utf-8') as file :
+        json.dump (ancienne_data, file, indent = 4)
+
 main (page)
     
