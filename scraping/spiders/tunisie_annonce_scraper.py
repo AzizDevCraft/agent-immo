@@ -20,8 +20,8 @@ headers = {
 debut = time.time ()
 def main (page, count) : 
     src = page.content  
+    
     encoding_detected = chardet.detect(src)["encoding"]
-    print(f"Encodage détecté : {encoding_detected}") 
     html_content = src.decode(encoding_detected, errors="replace")
     
     soup = BeautifulSoup (html_content, 'lxml')
@@ -45,7 +45,6 @@ def main (page, count) :
         
         return detail 
     
-    
     for annonce in annonces : 
         ancienne_data.append (get_url_annonce (annonce))
         print (f"annonce {count} recuperer avec succes !")
@@ -53,21 +52,37 @@ def main (page, count) :
     
     with open ("data/raw/annonce-urls.json", 'w', encoding = 'utf-8') as file :
         json.dump (ancienne_data, file, indent = 4)
-        
+
+def extract_data (url, headers) : 
+    page = requests.get (url, headers)
+    src = page.content
+    
+    encoding_detected = chardet.detect(src)["encoding"]
+    html_content = src.decode(encoding_detected, errors="replace")   
+    
+    soup = BeautifulSoup (html_content, 'lxml')
+    importent_sections = soup.find_all ("table", {"class" : "da_rub_cadre"})
+    table_info = importent_sections [1]
+    section_photos = importent_sections [3]
+
+
+       
 
 if __name__ == "__main__" :
     count = -24
-    for num_page in range (1, 1032) :
-        url = f"http://www.tunisie-annonce.com/AnnoncesImmobilier.asp?rech_cod_cat=1&rech_cod_rub=&rech_cod_typ=&rech_cod_sou_typ=&rech_cod_pay=TN&rech_cod_reg=&rech_cod_vil=&rech_cod_loc=&rech_prix_min=&rech_prix_max=&rech_surf_min=&rech_surf_max=&rech_age=&rech_photo=&rech_typ_cli=&rech_order_by=31&rech_page_num={num_page}"
-        page = requests.get (url, headers)
-        count += 25
-        main (page, count)
-        time.sleep(random.uniform (0.2, 1.8))
-        tour = time.time ()
-        print ("----------------------------------------------------")
-        print ("Serie de 25 été ajouter avec succee ! ")
-        print (f"temps passé {tour - debut}")
-        print ("----------------------------------------------------")
+    # for num_page in range (1, 1032) :
+    #     url = f"http://www.tunisie-annonce.com/AnnoncesImmobilier.asp?rech_cod_cat=1&rech_cod_rub=&rech_cod_typ=&rech_cod_sou_typ=&rech_cod_pay=TN&rech_cod_reg=&rech_cod_vil=&rech_cod_loc=&rech_prix_min=&rech_prix_max=&rech_surf_min=&rech_surf_max=&rech_age=&rech_photo=&rech_typ_cli=&rech_order_by=31&rech_page_num={num_page}"
+    #     page = requests.get (url, headers)
+    #     count += 25
+    #     main (page, count)
+    #     time.sleep(random.uniform (0.2, 1.8))
+    #     tour = time.time ()
+    #     print ("----------------------------------------------------")
+    #     print ("Serie de 25 été ajouter avec succee ! ")
+    #     print (f"temps passé {tour - debut}")
+    #     print ("----------------------------------------------------")
+    
+    extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3371741", headers)
     
 
 
