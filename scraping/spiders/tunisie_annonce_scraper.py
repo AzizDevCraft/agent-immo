@@ -61,8 +61,39 @@ def extract_data (url, headers) :
     html_content = src.decode(encoding_detected, errors="replace")   
     
     soup = BeautifulSoup (html_content, 'lxml')
-    importent_sections = soup.find_all ("table", {"class" : "da_rub_cadre"})
-    table_info = importent_sections [1]
+    if "Cette annonce est inexistante" not in soup.title.string :
+        importent_sections = soup.find_all ("table", {"class" : "da_rub_cadre"})
+        table_info = importent_sections [1].find_all ("tr")
+        titre = table_info [1].contents[0].text # à ajouter dans le fichier json
+        categorie = table_info [3].find_all ('a')[1:]
+        nature_bien, type_bien = [_.text for _ in categorie] # à ajouter dans le fichier json
+        localisation =  table_info [5].find_all ('a') [1:] 
+        gouvernerat, municipalite, quartier = [_.text for _ in localisation] # à ajouter dans le fichier json
+        data = {
+            'titre' : titre, 
+            'nature du bien' : nature_bien,
+            'type de bien' : type_bien,
+            'gouvernerat' : gouvernerat, 
+            'municipalite' : municipalite, 
+            'quartier' : quartier            
+        }
+        if table_info [7].contents[1].text == 'Adresse' :
+            data [table_info [7].contents[1].text] = table_info [7].contents[3].text
+            del table_info[7]
+            del table_info[7]
+        
+        for _ in range (7, 12, 2) : 
+            data [table_info [_].contents[1].text] = table_info [_].contents[3].text
+        
+        for _ in range (0, 3, 2) : 
+            data [table_info [-2].find_all ('td') [_].text] = table_info [-2].find_all ('td') [_ + 1].text
+            
+        print (data)
+        
+    
+    else : 
+        print ("cette annonce n'existe plus !")
+        
     section_photos = importent_sections [3]
 
 
@@ -83,6 +114,7 @@ if __name__ == "__main__" :
     #     print ("----------------------------------------------------")
     
     extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3371741", headers)
+    extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3387860", headers)
     
 
 
