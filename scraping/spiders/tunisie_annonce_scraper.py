@@ -61,7 +61,8 @@ def extract_data (url, headers) :
     html_content = src.decode(encoding_detected, errors="replace")   
     
     soup = BeautifulSoup (html_content, 'lxml')
-    if "Cette annonce est inexistante" not in soup.title.string :
+    print (soup.find ("tr", {"class" : "da_entete"}).text)
+    if soup.find ("tr", {"class" : "da_entete"}).text != 'Erreur' :
         importent_sections = soup.find_all ("table", {"class" : "da_rub_cadre"})
         table_info = importent_sections [1].find_all ("tr")
         titre = table_info [1].contents[0].text # à ajouter dans le fichier json
@@ -89,11 +90,9 @@ def extract_data (url, headers) :
             data [table_info [-2].find_all ('td') [_].text] = table_info [-2].find_all ('td') [_ + 1].text
             
         return data 
-        
-    
     else : 
-        print ("cette annonce n'existe plus !")    
-    section_photos = importent_sections [3]
+        return {"erreur" : soup.title.string}  
+    # section_photos = importent_sections [3]
 
 
        
@@ -112,8 +111,8 @@ if __name__ == "__main__" :
     #     print (f"temps passé {tour - debut}")
     #     print ("----------------------------------------------------")
     
-    extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3371741", headers)
-    extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3387860", headers)
+    # extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3387860", headers)
+    extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3363192", headers)
     
 
 
