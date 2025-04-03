@@ -6,7 +6,6 @@ import random
 import json
 import chardet 
 
-num_page = 2
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -17,12 +16,9 @@ user_agents = [
 headers = {
     'User-Agent' : random.choice (user_agents)
 }
-url = f"http://www.tunisie-annonce.com/AnnoncesImmobilier.asp?rech_cod_cat=1&rech_cod_rub=&rech_cod_typ=&rech_cod_sou_typ=&rech_cod_pay=TN&rech_cod_reg=&rech_cod_vil=&rech_cod_loc=&rech_prix_min=&rech_prix_max=&rech_surf_min=&rech_surf_max=&rech_age=&rech_photo=&rech_typ_cli=&rech_order_by=31&rech_page_num={num_page}"
-page = requests.get (url, headers)
 
-count = 1
-
-def main (page) : 
+debut = time.time ()
+def main (page, count) : 
     src = page.content  
     encoding_detected = chardet.detect(src)["encoding"]
     print(f"Encodage détecté : {encoding_detected}") 
@@ -52,11 +48,26 @@ def main (page) :
     
     for annonce in annonces : 
         ancienne_data.append (get_url_annonce (annonce))
-        print (f"annonce {count} recuperer et ajouter avec succes !")
+        print (f"annonce {count} recuperer avec succes !")
         count += 1
     
     with open ("data/raw/annonce-urls.json", 'w', encoding = 'utf-8') as file :
         json.dump (ancienne_data, file, indent = 4)
+        
 
-main (page)
+if __name__ == "__main__" :
+    count = -24
+    for num_page in range (1, 1032) :
+        url = f"http://www.tunisie-annonce.com/AnnoncesImmobilier.asp?rech_cod_cat=1&rech_cod_rub=&rech_cod_typ=&rech_cod_sou_typ=&rech_cod_pay=TN&rech_cod_reg=&rech_cod_vil=&rech_cod_loc=&rech_prix_min=&rech_prix_max=&rech_surf_min=&rech_surf_max=&rech_age=&rech_photo=&rech_typ_cli=&rech_order_by=31&rech_page_num={num_page}"
+        page = requests.get (url, headers)
+        count += 25
+        main (page, count)
+        time.sleep(random.uniform (0.2, 1.8))
+        tour = time.time ()
+        print ("----------------------------------------------------")
+        print ("Serie de 25 été ajouter avec succee ! ")
+        print (f"temps passé {tour - debut}")
+        print ("----------------------------------------------------")
     
+
+
