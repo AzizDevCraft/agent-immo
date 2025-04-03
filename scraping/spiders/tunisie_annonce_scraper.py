@@ -88,12 +88,11 @@ def extract_data (url, headers) :
         for _ in range (0, 3, 2) : 
             data [table_info [-2].find_all ('td') [_].text] = table_info [-2].find_all ('td') [_ + 1].text
             
-        print (data)
+        return data 
         
     
     else : 
-        print ("cette annonce n'existe plus !")
-        
+        print ("cette annonce n'existe plus !")    
     section_photos = importent_sections [3]
 
 
