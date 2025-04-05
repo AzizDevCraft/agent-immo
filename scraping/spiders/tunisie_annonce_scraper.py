@@ -88,11 +88,20 @@ def extract_data (url, headers) :
         
         for _ in range (0, 3, 2) : 
             data [table_info [-2].find_all ('td') [_].text] = table_info [-2].find_all ('td') [_ + 1].text
-            
+        
+        if len (importent_sections) > 8 : 
+            section_photos = importent_sections [3] 
+            list_images = section_photos.find_all ("img")
+            annonce_images = list(set([f"http://www.tunisie-annonce.com/{img.get ("src")}" for img in list_images]))
+            data ['annonce_images'] = annonce_images
+        
+        contact = soup.find ("table", {"class" : "da_rub_cadre_contact"}).find_all ('li')
+        for _ in contact : 
+            data[_.contents[0].text] = _.contents[1].text 
         return data 
     else : 
         return {"erreur" : soup.title.string}  
-    # section_photos = importent_sections [3]
+    
 
 
        
@@ -111,8 +120,10 @@ if __name__ == "__main__" :
     #     print (f"temps passé {tour - debut}")
     #     print ("----------------------------------------------------")
     
-    # extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3387860", headers)
-    extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3363192", headers)
-    
+    # avec photo
+    print (extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3390726", headers)) 
+    # sans photo 
+    print (extract_data ("http://www.tunisie-annonce.com/DetailsAnnonceImmobilier.asp?cod_ann=3391906", headers))
+   
 
 
