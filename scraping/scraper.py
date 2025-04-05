@@ -16,15 +16,18 @@ headers = {
 
 debut = time.time ()
 
-with open ('data/raw/annonces-url.json', 'r') as file : 
+with open ('data/raw/annonces-url.json', 'r', encoding= 'utf-8') as file : 
     data = json.load (file)
 
-data_list = []
-for _ in range (500) : 
-    data_list.append (extract_data (data [_]["url_annonce"], headers))
-    print (f"annonce {_ + 1} cb scrape !")
 
-with open ('data/raw/annonces-data.json', 'w') as file : 
-    json.dump (data_list, file, indent=4)   
- 
-print (f'temps ecoule : {(time.time () - debut)/60} min')
+for _ in range (10001, len (data)) : 
+    annonce = extract_data (data [_]["url_annonce"], headers)
+    print (f"annonce {_} cb scrape !")
+    with open ('data/raw/annonces-data.ndjson', 'a', encoding='utf-8') as file : 
+        file.write (json.dumps (annonce, indent=4) + '\n')
+    print (f"-------------------- annonce {_} ajoutés ---------------------")
+    if _%500 == 0 : 
+        time.sleep (5)
+        print (f'une petite pause on a atteind {_} annonces !')
+fin = time.time () - debut
+print (f'temps ecoule : {fin/3600} heures')
