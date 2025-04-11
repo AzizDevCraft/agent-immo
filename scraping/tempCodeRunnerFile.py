@@ -1,0 +1,1 @@
+print (f'contact : {obj ['list_contact']}')
