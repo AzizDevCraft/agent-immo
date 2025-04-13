@@ -1,6 +1,8 @@
 import json 
 import re 
 import time 
+from typing import Union
+
 
 def detect_erreur (obj) :
     if 'erreur' in obj.keys () or 'Surface' not in obj.keys () or "n.d" in obj ['Prix'].strip () :
@@ -10,7 +12,9 @@ def detect_erreur (obj) :
     return True
 
 def extract_id (obj) : 
-    id = int (re.search (r"\d+", obj ['titre']).group ())
+    id_position = re.search (r"\d+", obj ['titre']).span ()
+    id = int(obj ['titre'][id_position[0] : id_position[1]])
+    obj ['titre'] = obj ['titre'][id_position[1]+2 :]
     return id
 
 def surface (obj) :
@@ -22,6 +26,27 @@ def prix (obj) :
     prx = re.search (r'[\d+\s*]+', obj ['Prix']).group ()
     prix_final = int (''.join (prx.split (' '))) 
     return prix_final
+
+def nb_chambres (obj) :
+    recherche =  re.search (r"s\s*\+?\s*\d{1}", obj ['titre'], re.IGNORECASE)
+    if recherche : 
+        return int (recherche.group () [-1])
+    elif re.search (r"s\s*\+*\s*\d{1}", obj ['Texte'], re.IGNORECASE) : 
+        recherche2 = re.search (r"s\s*\+*\s*\d{1}", obj ['Texte'], re.IGNORECASE).group ()
+        return int (recherche2 [-1])
+    else : 
+        if re.search (r"\d", obj ['type de bien']) : 
+            return re.search (r"\d", obj ['type de bien']).group ()
+        return None 
+
+def is_meuble (obj) : 
+    recherche = re.search (r'(non|pas)[-\s]?meubl[eé]', obj ['titre'], re.IGNORECASE)
+    if recherche or re.search (r'(non|pas)[-\s]?meubl[eé]', obj ['Texte'], re.IGNORECASE): 
+        return False
+    elif re.search (r'meubl[eé]', obj ['Texte'], re.IGNORECASE) or re.search (r'meubl[eé]', obj ['titre'], re.IGNORECASE) :
+        return True 
+    else : 
+        return None
 
 def contact (obj : dict) -> list : 
 
@@ -59,11 +84,13 @@ def contact (obj : dict) -> list :
     list_final = none_eliminator (list(set(contact_list)))
     return list_final
         
-def update (obj : dict, id : int, surface : int, prix : int, contact : list) : 
+def update (obj : dict, id : int, surface : int, prix : int, contact : list, nb_chambres : int, is_meuble : Union [bool | None]) : 
     obj ['id'] = id 
     obj ['surface'] = surface
     obj ['prix'] = prix
     obj ['list_contact'] = contact
+    obj ['nb_chambres'] = nb_chambres
+    obj ['meuble'] = is_meuble
     
     del obj ['Prix']
     del obj ['Surface']
@@ -81,10 +108,11 @@ if __name__ == "__main__" :
             obj = json.loads (line)
             print (f"-------------------- annonce n°{ct} ------------------------------")
             if detect_erreur (obj) :
-                new_obj = update (obj, extract_id (obj), surface (obj), prix (obj), contact (obj))
+                new_obj = update (obj, extract_id (obj), surface (obj), prix (obj), contact (obj), nb_chambres (obj), is_meuble (obj))
                 if len (new_obj ["list_contact"]) != 0 : 
                     valide.append (new_obj)
-                    print (f'id : {extract_id (obj)}')
+                else : 
+                    compteur_erreur += 1
             else : 
                 print ("erreur")
                 compteur_erreur += 1
@@ -98,6 +126,5 @@ if __name__ == "__main__" :
 
     print (f'compteur_erreur : {compteur_erreur}')
     print (f'objet ajouter {len (valide)}')
-    print (f'temps ecoulé : {str (time.time () - debut)[:5]}s')
-    
+    print (f'temps ecoulé : {str (time.time () - debut)[:4]}s')
 
